@@ -18,7 +18,7 @@ class curl {
      	 * @param array $header API request header
 	 */
 	public function request ($method, $url, $param, $header) {
-	curl:
+		curl:
         $this->ch = curl_init();
         switch ($method){
             case "GET":
@@ -42,7 +42,7 @@ class curl {
         $this->error = curl_error($this->ch);
         if(!$this->result){
             if($this->error) {
-                echo "[!] ".date('H:i:s')." | cURL Error: Gagal terhubung ke Server MotorQX! ...wait...\r\r";
+                echo "[!] ".date('H:i:s')." | cURL Error: Gagal terhubung ke Server MotorQX!\n";
                 sleep(1);
                 goto curl;
             } else {
@@ -90,7 +90,7 @@ class motorku {
             if($json->status->code == 200) {
                 return $json->result;
             } else {
-                echo "[!] ".date('H:i:s')." | GAGAL Menggenerate Nama!\r\r";
+                echo "[!] ".date('H:i:s')." | GAGAL Menggenerate Nama!\n";
                 sleep(2);
                 goto randomuser;
             }        
@@ -104,7 +104,7 @@ class motorku {
      * Registrasi akun
      */
     function regis($name, $reff) { 
-        // $reff = 'TOPSMVCN';
+        // $reff = 'KRU1GCPX';
         $curl = new curl();
 
         $provider = ['0812', '0813', '0821', '0857', '0856', '0838', '0877'];
@@ -340,6 +340,11 @@ class motorku {
    
         $json = json_decode($redeem);
 
+        if($json->status == 1) {
+            $fh = fopen("log.txt", "a");
+            fwrite($fh, "Redeem respone :".$redeem."\n\n");
+            fclose($fh);
+        }
         return $json;
     }
 
@@ -370,7 +375,7 @@ class motorku {
 
 $motorku = new motorku();
 
-echo "\nV2.7.1\nby @eco.nxn reCode By CJDW\n\nDisclaimer:\nSegala bentuk resiko atas tindakan ini saya pribadi tidak bertanggung jawab, gunakanlah senormal-nya!\n\n";
+echo "\nV2.7.2\nby @eco.nxn\n\nDisclaimer:\nSegala bentuk resiko atas tindakan ini saya pribadi tidak bertanggung jawab, gunakanlah senormal-nya!\n\n";
 echo "Kode Referral :";
 $reff = trim(fgets(STDIN));
 poin:
