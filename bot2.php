@@ -1,548 +1,201 @@
 <?php
-/**	
- * @release 2020
- * 
- * @author eco.nxn
- */
+
+// Auto backup chat Instagram
+// Credit: Alfian Ananda Putra
+
 date_default_timezone_set("Asia/Jakarta");
 error_reporting(0);
-class curl {
-	private $ch, $result, $error;
-	
-	/**	
-	 * HTTP request
-	 * 
-	 * @param string $method HTTP request method
-	 * @param string $url API request URL
-	 * @param array $param API request data
-     	 * @param array $header API request header
-	 */
-	public function request ($method, $url, $param, $header) {
-		curl:
-        $this->ch = curl_init();
-        switch ($method){
-            case "GET":
-                curl_setopt($this->ch, CURLOPT_POST, false);
-                break;
-            case "POST":               
-                curl_setopt($this->ch, CURLOPT_POST, true);
-                curl_setopt($this->ch, CURLOPT_POSTFIELDS, $param);
-                break;
-        }
-        curl_setopt($this->ch, CURLOPT_URL, 'https://api-servicemotorkuexpress.astra.co.id'.$url);
-        curl_setopt($this->ch, CURLOPT_USERAGENT, 'okhttp/3.12.1');
-        curl_setopt($this->ch, CURLOPT_HEADER, false);
-        curl_setopt($this->ch, CURLOPT_HTTPHEADER, $header);
-        curl_setopt($this->ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($this->ch, CURLOPT_FOLLOWLOCATION, 1);
-        curl_setopt($this->ch, CURLOPT_CONNECTTIMEOUT, 10);
-        curl_setopt($this->ch, CURLOPT_TIMEOUT, 120);
 
-        $this->result = curl_exec($this->ch);
-        $this->error = curl_error($this->ch);
-        if(!$this->result){
-            if($this->error) {
-                echo "[!] cURL Error: ".$this->error.", Maybe the internal server error or DOWN!\n";
-                sleep(1);
-                goto curl;
-            } else {
-                echo "[!] cURL Error: No Result\n\n";
-                die();
-            }
-        }
-        curl_close($this->ch);
-        return $this->result;
-    }  
+function getCSRF(){
+  $fgc    =   file_get_contents("https://www.instagram.com");
+  $explode    =   explode('"csrf_token":"',$fgc);
+  $explode    =   explode('"',$explode[1]);
+  return $explode[0];
 }
 
-class motorku {
-
-    function random_numb($length)
-    {
-        $data = '0123456789';
-        $string = '';
-        for($i = 0; $i < $length; $i++) {
-            $pos = rand(0, strlen($data)-1);
-            $string .= $data{$pos};
-        }
-        return $string;
-    }
-
-    function random_token($length)
-    {
-        $data = 'qwertyuioplkjhgfdsazxcvbnmMNBVCXZASDFGHJKLPOIUYTREWQ';
-        $string = '';
-        for($i = 0; $i < $length; $i++) {
-            $pos = rand(0, strlen($data)-1);
-            $string .= $data{$pos};
-        }
-        return $string;
-    }
-
-    /**
-     * Get random name
-     */
-    function randomuser() {
-        randomuser:
-        $randomuser = file_get_contents('https://econxn.id/api/v1/randomUser/?quantity=50');
-        if($randomuser) {
-            $json = json_decode($randomuser);
-            if($json->status->code == 200) {
-                return $json->result;
-            } else {
-                echo "[!] ".date('H:i:s')." | GAGAL Menggenerate Nama!\n";
-                sleep(2);
-                goto randomuser;
-            }        
-        } else {        
-            sleep(2);
-            goto randomuser;
-        }
-    }
-
-    /**
-     * Registrasi akun
-     */
-    function regis($name, $reff) { 
-        // $reff = 'TOPSMVCN';
-        $curl = new curl();
-
-        $provider = ['0812', '0813', '0821', '0857', '0856', '0838', '0877'];
-        $phone = $provider[rand(0,6)].$this->random_numb(rand(8,9));
-
-        $method   = 'POST';
-        $header   =  [
-            'authorization: Bearer null',
-            'mokita-enc: eyJlbmMtdmVyc2lvbiI6IjEuMS5xMiIsImNpcGhlcnRleHQiOiJnaGJSdVRJeGRndDg0UHVEZTVaM0F3PT0iLCJpdiI6IjE1ODQ5NTQyOTAxNTg0OTU0MjkwMTU4NDk1NDI5MDE1IiwidGltZXN0YW1wIjoxNTg0OTc5NDkwMjcwLCJyZXF1ZXN0VGltZXN0YW1wIjoxNTg0OTc5NDkwLCJ0aW1lc3RhbXBVdGMiOjE1ODQ5NTQyOTAyNzAsInJlcXVlc3RUaW1lc3RhbXBVdGMiOjE1ODQ5NTQyOTAsInNhbHQiOiJjMDIxN2NjZWFkYjE0MzQwNWZiNzBjZmU1ZjhjMjRkYzhmZDAyMDkyNGI5YjU0ZTQ1ODJhZjkxNjhmMTkzZDgyYWE4Y2U3OTk0NTYyYmFhZjY0NzI4NGNiNTkyNjUxNDM2MTY0MzdkOGM4OWY5OWQ3YzBiZWE4NzhjMWQzMWE0NjRmYjI0Y2JhYjkyZGZkZDk2NmVlMmYxYzU4NTY1ZWJjYmFlZTdmYjAzMGY3OTI1OGM1N2ZiZjM1NGEyNjI3NWE2ZmE3MTRjOWM1YWRlYmFjYzJlYjViNjRjZmVlODY4MTM4OTI0NzdkYTMxNjMxODM0NjA2MDVhYWEyNzI1NmUzYzc0YTFjZTE1YzQ3NDdlNDU5NTYzMDNjOWZkNTk0NzZhYzk4N2IyMzQ1ZTRkZDVhOTAyNjA5OGRhZWExNWU2MmIwZjY4Y2ZiYmI4Y2YxMzY1MDYyNmI4NWFjMDJjZDI5NGUyMjc1YTg0NWFhNzE2MzY1YjAxODJjYjkwOWMxZDEyZmU2ZDIyZmMzZjIyMGY0OTY4ZDU1NmY2MzRiOTNlMmFiMDk2ZTVhMzQyMGIwYTY1OTdhMGU1NjlkNjg4ZWY1OTJjMjIwOTYyYmJiNDM2M2M1ZTM5OWE1NmFhMTg4MWI1NDFiNjQ0NmEzZjg2YTA0Yzc5MGU0ZTg5MzNmYWU3NyIsIml0ZXJhdGlvbnMiOjk5OX0=',
-            'Content-Type: application/json'
-        ];
-        $endpoint = '/api/register/q2';
-        
-        $param = '{"name":"'.$name.'","phone_number":"'.$phone.'","email":"","latitude":null,"longitude":null,"referral_code":"'.strtoupper($reff).'"}';
-
-        $regis = $curl->request ($method, $endpoint, $param, $header);
-
-        $json = json_decode($regis);
-
-        if($json->status == 1) {
-            $token = $json->token;
-        } else {
-            $token = NULL;
-        }
-        
-        return $this->get_points($token);
-    }
-
-    /**
-     * Login akun
-     */
-    function login($phone) {
-        $curl = new curl();
-
-        $method   = 'POST';
-        $header   =  [
-            'authorization: Bearer null',
-            'Content-Type: application/json'
-        ];
-        $endpoint = '/api/login';
-
-        $param = '{"msisdn":"'.$phone.'"}';
-
-        $login = $curl->request ($method, $endpoint, $param, $header);
-   
-        $json = json_decode($login);
-
-        if($json->status == 1) {
-            return TRUE;
-        } else {
-            return FALSE;
-        }
-    }
-
-    /**
-     * Verify akun
-     */
-    function verify_login($phone, $otp) {
-        $curl = new curl();
-
-        $method   = 'POST';
-        $header   =  [
-            'authorization: Bearer null',
-            'Content-Type: application/json'
-        ];
-        $endpoint = '/api/otp/consume/login';
-
-        $param = '{"phone_number":"'.$phone.'","otp":"'.$otp.'","key":"'.$otp.'","ahass_id":"'.$otp.'"}';
-
-        $verify = $curl->request ($method, $endpoint, $param, $header);
-   
-        $json = json_decode($verify);
-
-        if($json->status == 1) {
-            return $json->token;
-        } else {
-            return FALSE;
-        }
-    }
-
-    /**
-     * Progress logging-in
-     */
-    function loginProgress() {
-        login:
-        echo "Masukkan No. HP :";
-        $phone = trim(fgets(STDIN));
-        $login = $this->login($phone);
-        if($login==true) {
-
-            verify:
-            echo "Masukkan OTP    :";
-            $otp = trim(fgets(STDIN));
-            $verify = $this->verify_login($phone, $otp);
-            if($verify==false) {
-                echo "[!] Kode OTP SALAH!\n";
-                goto verify;
-            } else {
-                $owner_token = $verify;
-                unlink("src/token.txt");
-                $fh = fopen("src/token.txt", "a");
-                fwrite($fh, $owner_token);
-                fclose($fh);
-                return $owner_token;
-            }
-
-        } else {
-            echo "[!] Login GAGAL! Enter R (Coba lagi!), Z (Lanjut tanpa Auto Redeem).\n";
-            echo "Choice :";
-            $choice = trim(fgets(STDIN));
-            if(strtolower($choice) == 'r') {
-                echo "\n";
-                goto login;
-            } elseif(strtolower($choice) != 'z') {
-                echo "\n";
-                die();
-            }
-            return FALSE;
-        }
-    }
-
-    /**
-     * Get Points
-     */
-    function get_points($token) {
-        $curl = new curl();
-
-        $method   = 'POST';
-        $header   =  [
-            'authorization: Bearer '.$token,
-            'Content-Type: application/json'
-        ];
-        $endpoint = '/api/profile/firebaseToken';
-
-        $param = '{"token":"'.$this->random_token(11).':APA91bGoqkIHu5r36F9gAJblzHCV1XIwxh5MhvQXTD9y977rteh_q91GIX44zgHrx7um3SXXijcRU5aaeSm_Hqxe96sjDTCjBQpq6DdyJ_PDt9e7Le7p9r17DdNZfc119BltLGnvdgb"}';
-
-        $get_points = $curl->request ($method, $endpoint, $param, $header);
-   
-        $json = json_decode($get_points);
-
-        if($json->status == 1) {
-            return TRUE;
-        } else {
-            return FALSE;
-        }
-    }
-
-    /**
-     * Get info profile
-     */
-    function profile($owner_token) {
-        $curl = new curl();
-
-        $method   = 'GET';
-        $header   =  [
-            'authorization: Bearer '.$owner_token
-        ];
-        $endpoint = '/api/profile';
-
-        $profile = $curl->request ($method, $endpoint, $param=NULL, $header);
-   
-        $json = json_decode($profile);
-
-        if($json->status == 1) {
-            return $json;
-        } else {
-            return FALSE;
-        }
-    }
-    
-    /**
-     * Redeem Points
-     */
-    function voucher($categoryId, $token) {
-        $curl = new curl();
-
-        $method   = 'GET';
-        $header   =  [
-            'authorization: Bearer '.$token
-        ];
-        $endpoint = '/api/deal/category/'.$categoryId;
-
-        $voucher = $curl->request ($method, $endpoint, $param=NULL, $header);
-   
-        $json = json_decode($voucher);
-
-        if($json->status == 1) {
-            echo "\nDaftar Voucher Yang Akan Di Redeem Otomatis:\n";
-            
-            $total_pages = $json->meta->pagination->total_pages;
-            $no=1;
-            foreach ($json->data as $data) {     
-                echo "[".$no++."] ".$data->id." | ".$data->name."\n";
-            }      
-            echo "\n";
-            return $json->data;
-
-        } else {
-            return FALSE;
-        }
-    }
-
-    /**
-     * Redeem Points
-     */
-    function redeem($token, $item_id) {
-        $curl = new curl();
-
-        $method   = 'POST';
-        $header   =  [
-            'authorization: Bearer '.$token,
-            'Content-Type: application/json'
-        ];
-        $endpoint = '/api/redeem/point';
-
-        $param = '{"item_id":'.$item_id.'}';
-
-        $redeem = $curl->request ($method, $endpoint, $param, $header);
-   
-        $json = json_decode($redeem);
-
-        return $json;
-    }
- 
+// Membuat device id Android
+function generateDeviceId(){
+  $megaRandomHash = md5(number_format(microtime(true), 7, '', ''));
+  return 'android-'.substr($megaRandomHash, 16);
 }
 
-/**
- * Running
- */
-
-$motorku = new motorku();
-
-echo "V2.4\nby @eco.nxn\n\nDisclaimer:\nSegala bentuk resiko atas tindakan ini saya pribadi tidak bertanggung jawab, gunakanlah senormal-nya!\n\n";
-echo "Kode Referral :";
-$reff = trim(fgets(STDIN));
-poin:
-echo "Target Poin   :";
-$poin= trim(fgets(STDIN));
-if(!is_numeric($poin)) {
-    goto poin;
-} elseif ($poin< 15){
-    echo "[i] Masukkan jumlah poin yang diinginkan\n";
-    goto poin;
+// Membuat UUID
+function generateUUID($keepDashes = true){
+  $uuid = sprintf(
+    '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+    mt_rand(0, 0xffff),
+    mt_rand(0, 0xffff),
+    mt_rand(0, 0xffff),
+    mt_rand(0, 0x0fff) | 0x4000,
+    mt_rand(0, 0x3fff) | 0x8000,
+    mt_rand(0, 0xffff),
+    mt_rand(0, 0xffff),
+    mt_rand(0, 0xffff)
+  );
+  return $keepDashes ? $uuid : str_replace('-', '', $uuid);
 }
-echo "\n\n";
 
-echo "Auto Redeem [Y/N] :";
-$auto_redeem = trim(fgets(STDIN));
-if (strtolower($auto_redeem)=='y') {
+// Membuat signed_body untuk UA : Instagram 24.0.0.12.201 Android
+function hookGenerate($hook){
+  return 'ig_sig_key_version=4&signed_body=' . hash_hmac('sha256', $hook, '5bd86df31dc496a3a9fddb751515cc7602bdad357d085ac3c5531e18384068b4') . '.' . urlencode($hook);
+}
 
-    check_token:
-    $file  = "src/token.txt";
-    $list  = explode("\n",str_replace("\r","",file_get_contents($file)));
+// Fungsi request untuk mengirim data
+function request($url,$hookdata,$cookie,$method='GET'){
+  $ch = curl_init();
 
-    if(!empty($list[0])) { 
-        $_token = $list[0];
+  curl_setopt($ch, CURLOPT_URL, "https://i.instagram.com/api".$url);
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+  curl_setopt($ch, CURLOPT_HEADER, 1);
+  if($method == 'POST'){
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $hookdata);
+    curl_setopt($ch, CURLOPT_POST, 1);
+  }else{
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
+  }
 
-        $status_login = $motorku->profile($_token);
-        if($status_login == false) {
-            echo "[!] Invalid Token!, Sesi telah habis.\n";
-            $loginProgress = $motorku->loginProgress();
-            if($loginProgress == FALSE) {
-                $validToken = FALSE;
-            } else {
-                $validToken = TRUE;
-                $owner_token = $loginProgress;
+  $headers = array();
+  $headers[] = "Accept: */*";
+  $headers[] = "Content-Type: application/x-www-form-urlencoded";
+  $headers[] = 'Cookie2: _ENV["Version=1"]';
+  $headers[] = "Accept-Language: en-US";
+  $headers[] = "User-Agent: Instagram 24.0.0.12.201 Android (28/9; 320dpi; 720x1280; samsung; SM-J530Y; j5y17ltedx; samsungexynos7870; in_ID;)";
+  $headers[] = "Host: i.instagram.com";
+  if($cookie !== "0"){
+    $headers[] = "Cookie: ".$cookie;
+  }
+  curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+  $result = curl_exec($ch);
+  $httpcode  = curl_getinfo($ch);
+  $header    = substr($result, 0, curl_getinfo($ch, CURLINFO_HEADER_SIZE));
+  $body      = substr($result, curl_getinfo($ch, CURLINFO_HEADER_SIZE));
+
+  if(curl_errno($ch)){
+    echo 'Error:' . curl_error($ch);
+  }
+  curl_close ($ch);
+  return array($header, $body, $httpcode,$result,$url,$hookdata); // body itu response body
+}
+
+echo "                                    ____        _
+                                   |  _ \      | |
+  _ __ ___ _ __ ___   _____   _____| |_) | ___ | |_
+ | '__/ _ \ '_ ` _ \ / _ \ \ / / _ \  _ < / _ \| __|
+ | | |  __/ | | | | | (_) \ V /  __/ |_) | (_) | |_
+ |_|  \___|_| |_| |_|\___/ \_/ \___|____/ \___/ \__|
+
+
+© Pianjammalam 2020
+
+-----------------------------------------------------------
+";
+
+echo 'Selamat datang di removeBot V1 by @pianjammalam.
+Bot ini akan menghapus followers kalian yang memenuhi persyaratan. Harap pastikan followers Anda diatas 500 orang!
+
+Siapa aja yang akan di remove? Yang memenuhi KETIGA persyaratan berikut:
+- Followers yang Akunnya Private
+- Followers yang Followersnya lebih dikit dari Following
+- Followers yang Tidak Anda Follow
+
+Username: @';
+
+$usernameIg = trim(fgets(STDIN));
+
+echo 'Password: ';
+
+$passwordIg = trim(fgets(STDIN));
+
+$isTrueOrFalse = true;
+
+$maxId =  '';
+
+if(!empty($usernameIg) and !empty($passwordIg)){
+  $genDevId = generateDeviceId();
+  $tryLogin = request('/v1/accounts/login/',hookGenerate('{"phone_id":"'.generateUUID().'","_csrftoken":"'.getCSRF().'","username":"'.$usernameIg.'","adid":"'.generateUUID().'","guid":"'.generateUUID().'","device_id":"'.$genDevId.'","password":"'.$passwordIg.'","login_attempt_count":"0"}'),0,"POST");
+  if(!empty(json_decode($tryLogin[1],true)['logged_in_user']['pk'])){
+    $uid = json_decode($tryLogin[1],true)['logged_in_user']['pk'];
+    preg_match_all('%set-cookie: (.*?);%',$tryLogin[0],$d);$cookieInstagram = '';
+    for($o=0;$o<count($d[0]);$o++){$cookieInstagram.=$d[1][$o].";";}
+    // Menyimpan cookie ke file cookie.txt
+    $fwriteFunc = fopen('cookie.txt', 'w');
+    fwrite($fwriteFunc, $cookieInstagram);
+    fclose($fwriteFunc);
+    $cekFirstBefore = request('/v1/users/'.$uid.'/info/', 0, $cookieInstagram, 'GET')[1];
+
+    while($isTrueOrFalse){
+      $resultGetFollowers = request('/v1/friendships/'.$uid.'/followers/?search_surface=follow_list_page&order=default&query=&enable_groups=true&rank_token='.generateUUID().'&max_id='.$maxId,0,$cookieInstagram,"GET")[1];
+      if(strlen(json_decode($resultGetFollowers, true)['next_max_id']) > 5){
+        //print_r($resultGetFollowers);
+        foreach (json_decode($resultGetFollowers, true)['users'] as $key => $value) {
+          $pkFollowersTarget = json_decode($resultGetFollowers, true)['users'][$key]['pk'];
+          $requestCekPrivasiAkun  = request('/v1/users/'.$pkFollowersTarget.'/info/', 0, $cookieInstagram, 'GET')[1];
+          if(json_decode($requestCekPrivasiAkun, true)['user']['is_private'] == true){
+            echo '['.date("d-M-Y").' '.date("h:i:s").'] @'.json_decode($resultGetFollowers, true)['users'][$key]['username'].' => Private '.PHP_EOL;
+            if(json_decode($requestCekPrivasiAkun, true)['user']['follower_count'] <= json_decode($requestCekPrivasiAkun, true)['user']['following_count']){
+              $requestCekRelationship  = request('/v1/friendships/show/'.$pkFollowersTarget.'/', 0, $cookieInstagram, 'GET')[1];
+              if(json_decode($requestCekRelationship,true)['following']){
+                //echo '['.date("d-M-Y").' '.date("h:i:s").'] @'.json_decode($resultGetFollowers, true)['users'][$key]['username'].' => Lu follow ternyata '.PHP_EOL;
+              }else{
+                echo '['.date("d-M-Y").' '.date("h:i:s").'] @'.json_decode($resultGetFollowers, true)['users'][$key]['username'].' => Bisa kita eksekusi bos '.PHP_EOL;
+                request('/v1/friendships/remove_follower/'.$pkFollowersTarget.'/',hookGenerate('{"_csrftoken":"'.getCSRF().'","user_id":"'.$pkFollowersTarget.'","radio_type":"wifi-none","_uid":"'.$uid.'","_uuid":"'.generateUUID().'"}'),$cookieInstagram,"POST");
+                //print_r($removeFollowersAsu);
+                $fileSave = fopen("listYangKitaRemoveSob-".$usernameIg.".txt", "a");
+                fwrite($fileSave, '['.date("d-M-Y").' '.date("h:i:s").'] @'.json_decode($resultGetFollowers, true)['users'][$key]['username'].'
+');
+                fclose($fileSave);
+                sleep(3);
+              }
+            }else{
+              //echo '['.date("d-M-Y").' '.date("h:i:s").'] @'.json_decode($resultGetFollowers, true)['users'][$key]['username'].' => Followersnya banyak sob '.PHP_EOL;
             }
-        } else {
-            $validToken = TRUE;
-            $owner_token = $_token;
-        } 
-    } else {
-        $loginProgress = $motorku->loginProgress();
-        if($loginProgress == FALSE) {
-            $validToken = FALSE;
-        } else {
-            $validToken = TRUE;
-            $owner_token = $loginProgress;
+          }else{
+            //echo '['.date("d-M-Y").' '.date("h:i:s").'] @'.json_decode($resultGetFollowers, true)['users'][$key]['username'].' => Tidak Private '.PHP_EOL;
+          }
+          sleep(2);
         }
-    }
-
-}
-
-if($validToken == TRUE) {
-    /**
-     * Profile
-     */
-    $get_info = $motorku->profile($owner_token);
-    $owner_nama  = $get_info->data->name;
-    $owner_phone = $get_info->data->phone_number;
-    $owner_point = $get_info->data->point;
-
-    echo "[i] Anda sedang login sebagai ".$owner_nama." [".$owner_phone."], Total Poin: ".$owner_point."\n\n";
-
-    echo "Pilih Kategori Voucher Yang Ingin Di Redeem!\n";
-    echo "1. Makanan\n";
-    echo "2. Belanja\n";
-    pilih:
-    echo "Pilih :";
-    $categori = trim(fgets(STDIN));
-    if (!is_numeric($categori)) {
-        goto pilih;
-    } elseif($categori > 2) {
-        goto pilih;
-    }
-
-    switch($categori) {
-        case "1":
-            voucher1:
-            $voucher = $motorku->voucher(2, $owner_token);
-            if($voucher==false) {
-                goto voucher1;
+        $GLOBALS['maxId'] = json_decode($resultGetFollowers, true)['next_max_id'];
+      }else if(!empty(json_decode($resultGetFollowers, true)['users'][0]['pk'])){
+        foreach (json_decode($resultGetFollowers, true)['users'] as $key => $value) {
+          $pkFollowersTarget = json_decode($resultGetFollowers, true)['users'][$key]['pk'];
+          $requestCekPrivasiAkun  = request('/v1/users/'.$pkFollowersTarget.'/info/', 0, $cookieInstagram, 'GET')[1];
+          if(json_decode($requestCekPrivasiAkun, true)['user']['is_private'] == true){
+            echo '['.date("d-M-Y").' '.date("h:i:s").'] @'.json_decode($resultGetFollowers, true)['users'][$key]['username'].' => Private '.PHP_EOL;
+            if(json_decode($requestCekPrivasiAkun, true)['user']['follower_count'] <= json_decode($requestCekPrivasiAkun, true)['user']['following_count']){
+              $requestCekRelationship  = request('/v1/friendships/show/'.$pkFollowersTarget.'/', 0, $cookieInstagram, 'GET')[1];
+              if(json_decode($requestCekRelationship,true)['following']){
+                //echo '['.date("d-M-Y").' '.date("h:i:s").'] @'.json_decode($resultGetFollowers, true)['users'][$key]['username'].' => Lu follow ternyata '.PHP_EOL;
+              }else{
+                echo '['.date("d-M-Y").' '.date("h:i:s").'] @'.json_decode($resultGetFollowers, true)['users'][$key]['username'].' => Bisa kita eksekusi bos '.PHP_EOL;
+                request('/v1/friendships/remove_follower/'.$pkFollowersTarget.'/',hookGenerate('{"_csrftoken":"'.getCSRF().'","user_id":"'.$pkFollowersTarget.'","radio_type":"wifi-none","_uid":"'.$uid.'","_uuid":"'.generateUUID().'"}'),$cookieInstagram,"POST");
+                //print_r($removeFollowersAsu);
+                $fileSave = fopen("listYangKitaRemoveSob-".$usernameIg.".txt", "a");
+                fwrite($fileSave, '['.date("d-M-Y").' '.date("h:i:s").'] @'.json_decode($resultGetFollowers, true)['users'][$key]['username'].'
+');
+                fclose($fileSave);
+                sleep(3);
+              }
+            }else{
+              //echo '['.date("d-M-Y").' '.date("h:i:s").'] @'.json_decode($resultGetFollowers, true)['users'][$key]['username'].' => Followersnya banyak sob '.PHP_EOL;
             }
-        break;
-        case "2":
-            voucher2:
-            $voucher = $motorku->voucher(4, $owner_token);
-            if($voucher==false) {
-                goto voucher2;
-            }
-        break;
-    }
-
-    if($owner_point >= 5000) {
-        echo "[i] POINT LO SUDAH BANYAK, JANGAN MARUK! LANJUT LANGSUNG REDEEM AJA.\n";
-
-        while(true) {
-            foreach ($voucher as $dataVoucher) {
-                $item_id    = $dataVoucher->id;
-                $item_name  = $dataVoucher->name;
-                $item_point = $dataVoucher->point;
-    
-                $get_info_point = $motorku->profile($owner_token);
-                $owner_point = $get_info_point->data->point;
-    
-                if($owner_point >= $item_point) {
-                    $redeem = $motorku->redeem($owner_token, $item_id); 
-                    if($redeem->status == 1) { 
-                        echo "[i] ".date('H:i:s')." | ".$item_name." berhasil di Redeem\n";
-                    } else {
-                        echo "[!] ".date('H:i:s')." | GAGAL Redeem ".$item_name." | ".$redeem->msg."\n";
-                    }
-                } else {
-                    echo "\nDONE!\n\n";
-                    die();
-                }           
-            }
+          }else{
+            //echo '['.date("d-M-Y").' '.date("h:i:s").'] @'.json_decode($resultGetFollowers, true)['users'][$key]['username'].' => Tidak Private '.PHP_EOL;
+          }
+          sleep(2);
         }
-        
+        $GLOBALS['maxId'] = '0';
+      }else{
+        $cekFirstAfter = request('/v1/users/'.$uid.'/info/', 0, $cookieInstagram, 'GET')[1];
+        $GLOBALS['isTrueOrFalse'] = false;
+        //print_r($resultGetFollowers);
+        echo "Followers Sebelum: ".json_decode($cekFirstBefore, true)['follower_count']."\nFollowers Setelah: ".json_decode($cekFirstAfter, true)['follower_count']."\nBot selesai bekerja :)\n";//.print_r($resultGetFollowers);
+      }
+      sleep(120);
     }
+  }else{
+    echo "Ada yang salah dengan akunmu! \n". print_r($tryLogin);
+  }
+}else{
+  echo "Jangan ada yang kosong!\n";
 }
-
-
-$no=1;
-$loop = $poin/15;
-while(TRUE) {
-
-    $randomuser = $motorku->randomuser();
-    foreach ($randomuser as $value) {
-        $firstname = $value->Firstname;
-        $lastname  = $value->Lastname;
-        $email     = $value->Email;
-
-        for ($i=0; $i < 2; $i++) { 
-            if($i==0) {
-                $name = $firstname;
-            } else {
-                $name = $lastname;
-            }
-
-            $run = $motorku->regis($name, $reff);
-            if($run==true) {
-                echo "[".$no++."] ".date('H:i:s')." | Registrasi Berhasil.";
-
-                if($validToken == TRUE) {
-                    $profile = $motorku->profile($owner_token);              
-                    $owner_point = $profile->data->point;                  
-
-                    echo " Total Poin Sekarang ".$owner_point.".\n";
-              
-                    foreach ($voucher as $dataVoucher) {
-                        $item_id    = $dataVoucher->id;
-                        $item_name  = $dataVoucher->name;
-                        $item_point = $dataVoucher->point;
-
-                        $get_info_point = $motorku->profile($owner_token);
-                        $owner_point = $get_info_point->data->point;
-
-                        if($owner_point >= $item_point) {
-                            $redeem = $motorku->redeem($owner_token, $item_id);
-                            if($redeem->status == 1) { 
-                                echo "[i] ".date('H:i:s')." | ".$item_name." berhasil di Redeem\n";
-                            } else {
-                                echo "[!] ".date('H:i:s')." | GAGAL Redeem ".$item_name." | ".$redeem->msg."\n";
-                            }
-                        }                                  
-                    }                           
-                } else {
-                    echo "\n";
-                }
-
-                if($no > $loop) {
-                    echo "\n\nDONE! Target Poin Tercapai.\n\n";
-                    die();
-                }             
-            } else {
-                echo "[!] ".date('H:i:s')." | Registrasi GAGAL\n";
-            }
-        }   
-        
-        if($owner_point >= 5000) {
-            echo "[i] POINT LO SUDAH BANYAK, JANGAN MARUK! LANJUT LANGSUNG REDEEM AJA.\n";
-    
-            while(true) {
-                foreach ($voucher as $dataVoucher) {
-                    $item_id    = $dataVoucher->id;
-                    $item_name  = $dataVoucher->name;
-                    $item_point = $dataVoucher->point;
-        
-                    $get_info_point = $motorku->profile($owner_token);
-                    $owner_point = $get_info_point->data->point;
-        
-                    if($owner_point >= $item_point) {
-                        $redeem = $motorku->redeem($owner_token, $item_id);
-                        if($redeem->status == 1) {
-                            echo "[i] ".date('H:i:s')." | ".$item_name." berhasil di Redeem\n";
-                        } else {
-                            echo "[!] ".date('H:i:s')." | GAGAL Redeem ".$item_name." | ".$redeem->msg."\n";
-                        }
-                    } else {
-                        echo "\nDONE!\n\n";
-                        die();
-                    }           
-                }
-            }
-            
-        }    
-    }   
-}
-
-?>
