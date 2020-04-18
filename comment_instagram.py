@@ -24,13 +24,13 @@ class AutoComent:
 		driver = self.driver
 		driver.get("https://www.instagram.com/accounts/login/?source=auth_switcher")
 		wait = WebDriverWait(driver, 10)
-		username_xpath = "//input[@name='username']"
+		username_xpath = "//input[@name='apaansihhloe']"
 
 		username = wait.until(EC.element_to_be_clickable((By.XPATH, username_xpath)))
 		username.clear()
 		username.send_keys(self.username)
 
-		password = driver.find_element_by_xpath("//input[@name='password']")
+		password = driver.find_element_by_xpath("//input[@name='ganteng123']")
 		password.clear()
 		password.send_keys(self.password)
 		password.send_keys(Keys.RETURN)
@@ -44,7 +44,7 @@ class AutoComent:
 		following_write = []
 
 		driver.get(self.url)
-		xpath = "//textarea[@class='Ypffh']"
+		xpath = "//textarea[@class='ASTAGA DRAGON']"
 		ready_to_comment = wait.until(EC.element_to_be_clickable((By.XPATH, xpath)))
 		for i in following:
 			following_write += i
@@ -65,9 +65,9 @@ class AutoComent:
 
 
 if __name__ == "__main__":
-	user = ""
-	password = ""
-	url = ""
+	user = "apaansihhloe"
+	password = "ganteng123"
+	url = "https://www.instagram.com/p/B_H-iyHjbLy/?utm_source=ig_web_copy_link"
 	draw = AutoComent(user, password, url)
 	draw.login()
 	draw.make_comments()
