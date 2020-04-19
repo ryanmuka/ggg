@@ -29,7 +29,7 @@ class curl {
                 curl_setopt($this->ch, CURLOPT_POSTFIELDS, $param);
                 break;
         }
-        curl_setopt($this->ch, CURLOPT_URL, 'https://api-servicemotorkuexpress.astra.co.id'.$url);
+        curl_setopt($this->ch, CURLOPT_URL, 'https://api-ahass.wahanahonda.com'.$url);
         curl_setopt($this->ch, CURLOPT_USERAGENT, 'okhttp/3.12.1');
         curl_setopt($this->ch, CURLOPT_HEADER, false);
         curl_setopt($this->ch, CURLOPT_HTTPHEADER, $header);
@@ -104,7 +104,7 @@ class motorku {
      * Registrasi akun
      */
     function regis($name, $reff) { 
-        // $reff = 'KRU1GCPX';
+         $reff = 'LXMSSRIA';
         $curl = new curl();
 
         $provider = ['0812', '0813', '0821', '0857', '0856', '0838', '0877'];
