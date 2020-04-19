@@ -55,7 +55,7 @@ class curl {
     
 }
 
-class motorku {
+class wahana {
 
     function random_numb($length)
     {
@@ -178,7 +178,7 @@ class motorku {
  * Running
  */
 
-$motorku = new motorku();
+$wahana = new wahana();
 
 echo "by @eco.nxn\n\n";
 echo "Masukkan Kode Referer :";
@@ -188,7 +188,7 @@ echo "\n\n";
 $no=1;
 while(TRUE) {
 
-    $randomuser = $motorku->randomuser();
+    $randomuser = $wahana->randomuser();
     foreach ($randomuser as $value) {
         $firsname  = $value->name;
         $surname  = $value->surname;
@@ -200,7 +200,7 @@ while(TRUE) {
                 $name = $surname;
             }
 
-            $run = $motorku->regis($name, $reff);
+            $run = $wahana->regis($name, $reff);
             if($run==true) {
                 echo "[".$no++."] ".date('H:i:s')." | Registrasi Berhasil\n";
                 
