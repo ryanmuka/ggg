@@ -55,7 +55,7 @@ class curl {
     }  
 }
 
-class motorku {
+class wahana {
 
     function random_numb($length)
     {
@@ -335,7 +335,7 @@ class motorku {
  * Running
  */
 
-$motorku = new motorku();
+$wahana = new wahana();
 
 echo "V2.4\nby @eco.nxn\n\nDisclaimer:\nSegala bentuk resiko atas tindakan ini saya pribadi tidak bertanggung jawab, gunakanlah senormal-nya!\n\n";
 echo "Kode Referral :";
@@ -362,10 +362,10 @@ if (strtolower($auto_redeem)=='y') {
     if(!empty($list[0])) { 
         $_token = $list[0];
 
-        $status_login = $motorku->profile($_token);
+        $status_login = $wahana->profile($_token);
         if($status_login == false) {
             echo "[!] Invalid Token!, Sesi telah habis.\n";
-            $loginProgress = $motorku->loginProgress();
+            $loginProgress = $wahana->loginProgress();
             if($loginProgress == FALSE) {
                 $validToken = FALSE;
             } else {
@@ -377,7 +377,7 @@ if (strtolower($auto_redeem)=='y') {
             $owner_token = $_token;
         } 
     } else {
-        $loginProgress = $motorku->loginProgress();
+        $loginProgress = $wahana->loginProgress();
         if($loginProgress == FALSE) {
             $validToken = FALSE;
         } else {
@@ -392,7 +392,7 @@ if($validToken == TRUE) {
     /**
      * Profile
      */
-    $get_info = $motorku->profile($owner_token);
+    $get_info = $wahana->profile($owner_token);
     $owner_nama  = $get_info->data->name;
     $owner_phone = $get_info->data->phone_number;
     $owner_point = $get_info->data->point;
@@ -414,14 +414,14 @@ if($validToken == TRUE) {
     switch($categori) {
         case "1":
             voucher1:
-            $voucher = $motorku->voucher(2, $owner_token);
+            $voucher = $wahana->voucher(2, $owner_token);
             if($voucher==false) {
                 goto voucher1;
             }
         break;
         case "2":
             voucher2:
-            $voucher = $motorku->voucher(4, $owner_token);
+            $voucher = $wahana->voucher(4, $owner_token);
             if($voucher==false) {
                 goto voucher2;
             }
@@ -437,11 +437,11 @@ if($validToken == TRUE) {
                 $item_name  = $dataVoucher->name;
                 $item_point = $dataVoucher->point;
     
-                $get_info_point = $motorku->profile($owner_token);
+                $get_info_point = $wahana->profile($owner_token);
                 $owner_point = $get_info_point->data->point;
     
                 if($owner_point >= $item_point) {
-                    $redeem = $motorku->redeem($owner_token, $item_id); 
+                    $redeem = $wahana->redeem($owner_token, $item_id); 
                     if($redeem->status == 1) { 
                         echo "[i] ".date('H:i:s')." | ".$item_name." berhasil di Redeem\n";
                     } else {
@@ -462,7 +462,7 @@ $no=1;
 $loop = $poin/15;
 while(TRUE) {
 
-    $randomuser = $motorku->randomuser();
+    $randomuser = $wahana->randomuser();
     foreach ($randomuser as $value) {
         $firstname = $value->Firstname;
         $lastname  = $value->Lastname;
@@ -475,12 +475,12 @@ while(TRUE) {
                 $name = $lastname;
             }
 
-            $run = $motorku->regis($name, $reff);
+            $run = $wahana->regis($name, $reff);
             if($run==true) {
                 echo "[".$no++."] ".date('H:i:s')." | Registrasi Berhasil.";
 
                 if($validToken == TRUE) {
-                    $profile = $motorku->profile($owner_token);              
+                    $profile = $wahana->profile($owner_token);              
                     $owner_point = $profile->data->point;                  
 
                     echo " Total Poin Sekarang ".$owner_point.".\n";
@@ -490,11 +490,11 @@ while(TRUE) {
                         $item_name  = $dataVoucher->name;
                         $item_point = $dataVoucher->point;
 
-                        $get_info_point = $motorku->profile($owner_token);
+                        $get_info_point = $wahana->profile($owner_token);
                         $owner_point = $get_info_point->data->point;
 
                         if($owner_point >= $item_point) {
-                            $redeem = $motorku->redeem($owner_token, $item_id);
+                            $redeem = $wahana->redeem($owner_token, $item_id);
                             if($redeem->status == 1) { 
                                 echo "[i] ".date('H:i:s')." | ".$item_name." berhasil di Redeem\n";
                             } else {
@@ -524,11 +524,11 @@ while(TRUE) {
                     $item_name  = $dataVoucher->name;
                     $item_point = $dataVoucher->point;
         
-                    $get_info_point = $motorku->profile($owner_token);
+                    $get_info_point = $wahana->profile($owner_token);
                     $owner_point = $get_info_point->data->point;
         
                     if($owner_point >= $item_point) {
-                        $redeem = $motorku->redeem($owner_token, $item_id);
+                        $redeem = $wahana->redeem($owner_token, $item_id);
                         if($redeem->status == 1) {
                             echo "[i] ".date('H:i:s')." | ".$item_name." berhasil di Redeem\n";
                         } else {
