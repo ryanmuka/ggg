@@ -1,218 +1,92 @@
 <?php
-/**	
- * @release 2020
- * 
- * @author eco.nxn
- */
-date_default_timezone_set("Asia/Jakarta");
 error_reporting(0);
-class curl {
-	private $ch, $result, $error;
+$SET = array();
+$SET['token'] = "";
+$SET['limit'] = "10";
+$SET['react'] = 1; /* 0 LIKE | 1 LOVE | 2 HAHA | 3 WOW | 4 SAD | 5 ANGRY */
+$SET['delay'] = 1;
+$SET['ulang'] = true;
+$SET['bot_komen'] = false; // true bot aktif dan false bot mati
+$komennya = array("Jangan Lupa Bahagia","Jangan Lupa Untuk Move On","Haloo","Jangan Lupa Makan","Jangan Pernah Bersedih");
+if($SET['ulang'] == true){
+	while (true) {
+		gass();
+		sleep($SET['delay']);
+	}
+} else {
+	gass();
+}
+function gass(){
+	global $SET,$komennya;
+	$status = getStatus();
+	$reaksi = array("LIKE","LOVE","HAHA","WOW","SAD","ANGRY");
+	$react_type = $reaksi[$SET['react']];
+	echo "Made by Muhammad Zakir Ramadhan\n";
+	echo "Recoded by Niqo Qintharo\n";
+	echo "Total Thread ( ".count($status['data'])." )\n";
+	sleep($SET['delay']);
+	foreach ($status['data'] as $key => $data) {
+		$id_post = $data['id'];
+		$from = $data['from']['name'];
+		$type = $data['type'];
+		$token = $SET['token'];
+		$ids = explode("_", $id_post);
+		$ids = $ids[1];
+		echo " [{$ids}] React love pada status {$from} ( {$type} ) ";
+		sleep($SET['delay']);
+		$url = "https://graph.facebook.com/v2.11/{$id_post}/reactions?";
+		$post = "type={$react_type}&access_token={$token}&method=post";
+		$respon = _curl($url,$post);
+		$result = json_decode($respon,true);
+		if($result['success']){
+			echo " Berhasil ";
+			if($SET['bot_komen'] == true){
+				$kata = $komennya[array_rand($komennya)];
+				$kata = $kata." ".$from. " :D\n-JustBot";
+				$kata = urlencode($kata);
+				$kirim_kata = file_get_contents("https://api.facebook.com/method/stream.addComment?post_id={$id_post}&comment={$kata}&access_token={$token}");
+				if(preg_match("/stream_addComment_response/", $kirim_kata)){
+					echo " ( Sukses Komen ) :p\n";
+				} else {
+					echo " ( Gagal Komen ) :(\n";
+				}
+			} else {
+				echo "\n";
+			}
+			
+		} else {
+			echo " Error\n";
+		}
+		sleep(5);
+	}
+}
+function getStatus()
+{
+	global $SET;
+	return json_decode(file_get_contents("https://graph.facebook.com/v2.1/me/home?fields=id,from,type,message&limit=".$SET['limit']."&access_token=".$SET['token']),true);
+}
+function _curl($url,$data)
+{
+	$curl = curl_init();
+    curl_setopt($curl, CURLOPT_URL, $url);
+    curl_setopt($curl, CURLOPT_CONNECTTIMEOUT,20);
+    curl_setopt($curl, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.64 Safari/537.31');
+    curl_setopt($curl, CURLOPT_COOKIE,'cookie.txt');
+    curl_setopt($curl, CURLOPT_COOKIEFILE,'cookie.txt');
+    curl_setopt($curl, CURLOPT_COOKIEJAR,'cookie.txt');
+    curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+    curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 3);
+    curl_setopt($curl, CURLOPT_HEADER, 0);
+    curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
+    curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
+    curl_setopt($curl,CURLOPT_FOLLOWLOCATION,true);
+    $result = curl_exec($curl);
+    if(!$result){
+    	echo "Retry 10s....";sleep(10);
+    }
+    return $result;
+    curl_close($curl);
+}
+function banner(){
 	
-	/**	
-	 * HTTP request
-	 * 
-	 * @param string $method HTTP request method
-	 * @param string $url API request URL
-	 * @param array $param API request data
-	 */
-	public function request ($method, $url, $param, $header) {
-		curl:
-        $this->ch = curl_init();
-        switch ($method){
-            case "GET":
-                curl_setopt($this->ch, CURLOPT_POST, false);
-                break;
-            case "POST":               
-                curl_setopt($this->ch, CURLOPT_POST, true);
-                curl_setopt($this->ch, CURLOPT_POSTFIELDS, $param);
-                break;
-        }
-        curl_setopt($this->ch, CURLOPT_URL, 'https://api-ahass.wahanahonda.com/'.$url);
-        curl_setopt($this->ch, CURLOPT_USERAGENT, 'okhttp/3.12.1');
-        curl_setopt($this->ch, CURLOPT_HEADER, false);
-        curl_setopt($this->ch, CURLOPT_HTTPHEADER, $header);
-        curl_setopt($this->ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($this->ch, CURLOPT_FOLLOWLOCATION, 1);
-        curl_setopt($this->ch, CURLOPT_CONNECTTIMEOUT, 10);
-        curl_setopt($this->ch, CURLOPT_TIMEOUT, 120);
-
-        $this->result = curl_exec($this->ch);
-        $this->error = curl_error($this->ch);
-        if(!$this->result){
-            if($this->error) {
-                echo "[!] cURL Error: ".$this->error."\n";
-                sleep(1);
-                goto curl;
-            } else {
-                echo "[!] cURL Error: No Result\n\n";
-                die();
-            }
-        }
-        curl_close($this->ch);
-        return $this->result;
-    }
-    
 }
-
-class wahana {
-
-    function random_numb($length)
-    {
-        $data = '0123456789';
-        $string = '';
-        for($i = 0; $i < $length; $i++) {
-            $pos = rand(0, strlen($data)-1);
-            $string .= $data{$pos};
-        }
-        return $string;
-    }
-
-    function random_str($length)
-    {
-        $data = 'euioa';
-        $string = '';
-        for($i = 0; $i < $length; $i++) {
-            $pos = rand(0, strlen($data)-1);
-            $string .= $data{$pos};
-        }
-        return $string;
-    }
-
-    function random_string($length)
-    {
-        $data = 'qwrtyplkjhgfdszxcvbnm';
-        $string = '';
-        for($i = 0; $i < $length; $i++) {
-            $pos = rand(0, strlen($data)-1);
-            $string .= $data{$pos};
-        }
-        return $string;
-    }
-
-    function random_token($length)
-    {
-        $data = 'qwertyuioplkjhgfdsazxcvbnmMNBVCXZASDFGHJKLPOIUYTREWQ';
-        $string = '';
-        for($i = 0; $i < $length; $i++) {
-            $pos = rand(0, strlen($data)-1);
-            $string .= $data{$pos};
-        }
-        return $string;
-    }
-
-    /**
-     * Get random name
-     */
-    function randomuser() {
-        randomuser:
-        $randomuser = file_get_contents('https://uinames.com/api/?ext&amount=100&region=indonesia&gender=random&source=uinames.com');
-        if($randomuser) {
-            $json = json_decode($randomuser);
-            return $json;
-        } else {
-            sleep(2);
-            goto randomuser;
-        }
-    }
-
-    /**
-     * Registrasi akun
-     */
-    function regis($name, $reff) { 
-        $curl = new curl();
-
-        $method   = 'POST';
-        $header   =  [
-            'authorization: Bearer null',
-            'mokita-enc: eyJlbmMtdmVyc2lvbiI6IjEuMS5xMiIsImNpcGhlcnRleHQiOiJnaGJSdVRJeGRndDg0UHVEZTVaM0F3PT0iLCJpdiI6IjE1ODQ5NTQyOTAxNTg0OTU0MjkwMTU4NDk1NDI5MDE1IiwidGltZXN0YW1wIjoxNTg0OTc5NDkwMjcwLCJyZXF1ZXN0VGltZXN0YW1wIjoxNTg0OTc5NDkwLCJ0aW1lc3RhbXBVdGMiOjE1ODQ5NTQyOTAyNzAsInJlcXVlc3RUaW1lc3RhbXBVdGMiOjE1ODQ5NTQyOTAsInNhbHQiOiJjMDIxN2NjZWFkYjE0MzQwNWZiNzBjZmU1ZjhjMjRkYzhmZDAyMDkyNGI5YjU0ZTQ1ODJhZjkxNjhmMTkzZDgyYWE4Y2U3OTk0NTYyYmFhZjY0NzI4NGNiNTkyNjUxNDM2MTY0MzdkOGM4OWY5OWQ3YzBiZWE4NzhjMWQzMWE0NjRmYjI0Y2JhYjkyZGZkZDk2NmVlMmYxYzU4NTY1ZWJjYmFlZTdmYjAzMGY3OTI1OGM1N2ZiZjM1NGEyNjI3NWE2ZmE3MTRjOWM1YWRlYmFjYzJlYjViNjRjZmVlODY4MTM4OTI0NzdkYTMxNjMxODM0NjA2MDVhYWEyNzI1NmUzYzc0YTFjZTE1YzQ3NDdlNDU5NTYzMDNjOWZkNTk0NzZhYzk4N2IyMzQ1ZTRkZDVhOTAyNjA5OGRhZWExNWU2MmIwZjY4Y2ZiYmI4Y2YxMzY1MDYyNmI4NWFjMDJjZDI5NGUyMjc1YTg0NWFhNzE2MzY1YjAxODJjYjkwOWMxZDEyZmU2ZDIyZmMzZjIyMGY0OTY4ZDU1NmY2MzRiOTNlMmFiMDk2ZTVhMzQyMGIwYTY1OTdhMGU1NjlkNjg4ZWY1OTJjMjIwOTYyYmJiNDM2M2M1ZTM5OWE1NmFhMTg4MWI1NDFiNjQ0NmEzZjg2YTA0Yzc5MGU0ZTg5MzNmYWU3NyIsIml0ZXJhdGlvbnMiOjk5OX0=',
-            'Content-Type: application/json'
-        ];
-        $endpoint = '/api/register/q2';
-
-        // $name =  strtoupper($this->random_string(1)).$this->random_str(1).$this->random_string(1).$this->random_str(1);
-        $param = '{"name":"'.$name.'","phone_number":"0812'.$this->random_numb(9).'","email":"","latitude":null,"longitude":null,"referral_code":"'.strtoupper($reff).'"}';
-
-        $regis = $curl->request ($method, $endpoint, $param, $header);
-
-        $json = json_decode($regis);
-
-        if($json->status == 1) {
-            $token = $json->token;
-        } else {
-            $token = NULL;
-        }
-        
-        return $this->get_points($token);
-    }
-
-    /**
-     * Get Points
-     */
-    function get_points($token) {
-        $curl = new curl();
-
-        $method   = 'POST';
-        $header   =  [
-            'authorization: Bearer '.$token,
-            'Content-Type: application/json'
-        ];
-        $endpoint = '/api/profile/firebaseToken';
-
-        $param = '{"token":"'.$this->random_token(11).':APA91bGoqkIHu5r36F9gAJblzHCV1XIwxh5MhvQXTD9y977rteh_q91GIX44zgHrx7um3SXXijcRU5aaeSm_Hqxe96sjDTCjBQpq6DdyJ_PDt9e7Le7p9r17DdNZfc119BltLGnvdgb"}';
-
-        $get_points = $curl->request ($method, $endpoint, $param, $header);
-   
-        $json = json_decode($get_points);
-
-        if($json->status == 1) {
-            return TRUE;
-        } else {
-            return FALSE;
-        }
-    }
-    
-}
-
-/**
- * Running
- */
-
-$wahana = new wahana();
-
-echo "by @eco.nxn\n\n";
-echo "Masukkan Kode Referer :";
-$reff = trim(fgets(STDIN));
-echo "\n\n";
-
-$no=1;
-while(TRUE) {
-
-    $randomuser = $wahana->randomuser();
-    foreach ($randomuser as $value) {
-        $firsname  = $value->name;
-        $surname  = $value->surname;
-
-        for ($i=0; $i < 2; $i++) { 
-            if($i==0) {
-                $name = $firsname;
-            } else {
-                $name = $surname;
-            }
-
-            $run = $wahana->regis($name, $reff);
-            if($run==true) {
-                echo "[".$no++."] ".date('H:i:s')." | Registrasi Berhasil\n";
-                
-            } else {
-                echo "[!] ".date('H:i:s')." | Registrasi GAGAL\n";
-            }
-            sleep(1);
-        }
-
-        
-    }
-    
-}
-
-?>
